@@ -38,10 +38,10 @@ local attach = function()
           virt_text = { { text, hl } },
           virt_text_pos = pos_type,
         })
+        local append -- we are appending text?
         if r then
           marks[idx] = r
-        else -- TODO: virtualedit=all?
-          assert(not eol)
+        elseif append then
           local len = api.nvim_buf_get_lines(0, row, row + 1, true)[1]:len()
           local pad = (' '):rep(start_col - len - 1)
           marks[idx] = assert(vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, len, {
