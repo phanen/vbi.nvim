@@ -8,19 +8,29 @@ local pos
 local update_pos = function() pos = fn.getcurpos() end
 local is_eol = function() return pos[5] == vim.v.maxcol end
 
+local last_key
+local attach_key = function()
+  vim.on_key(function(k, r) last_key = k end, ns)
+end
+local detach_key = function() vim.on_key(nil, ns) end
+local is_append = function() return last_key == 'A' end
+
 local attach = function()
+  attach_key()
   local start_pos = fn.getpos("'<")
   local end_pos = fn.getpos("'>")
   local start_row, start_col, end_row, _ = start_pos[2], start_pos[3], end_pos[2] - 1, end_pos[3]
-  local cursor = api.nvim_win_get_cursor(0)
-  local origin_line = api.nvim_get_current_line()
-  local hl = (function()
-    local ctx = vim.inspect_pos()
-    return vim.tbl_get(ctx, 'semantic_tokens', 1, 'opts', 'hl_group_link')
-      or vim.tbl_get(ctx, 'treesitter', 1, 'hl_group_link')
-      or '@variable'
-  end)()
+  -- local cursor = api.nvim_win_get_cursor(0)
+  -- local origin_line = api.nvim_get_current_line()
+  local hl = 'Substitute'
+    or (function()
+      local ctx = vim.inspect_pos()
+      return vim.tbl_get(ctx, 'semantic_tokens', 1, 'opts', 'hl_group_link')
+        or vim.tbl_get(ctx, 'treesitter', 1, 'hl_group_link')
+        or '@variable'
+    end)()
   local marks = {}
+  local append = is_append()
   if auid then api.nvim_del_autocmd(auid) end
   auid = autocmd({ 'TextChangedI', 'CursorMovedI' }, {
     group = group,
@@ -28,8 +38,8 @@ local attach = function()
       local line = api.nvim_get_current_line()
       -- TODO: diff? what's the actual behavior when feed <left>/<right>
       local col = api.nvim_win_get_cursor(0)[2]
-      local text = line:sub(start_col, col)
       local eol = is_eol()
+      local text = line:sub(start_col + (append and 1 or 0), col)
       local pos_type = eol and 'eol' or 'inline'
       for row = start_row, end_row do
         local idx = row - start_row
@@ -38,7 +48,6 @@ local attach = function()
           virt_text = { { text, hl } },
           virt_text_pos = pos_type,
         })
-        local append -- we are appending text?
         if r then
           marks[idx] = r
         elseif append then
@@ -61,9 +70,11 @@ local detach = function()
     auid = nil
   end
   api.nvim_buf_clear_namespace(0, ns, 0, -1)
+  detach_key()
 end
 
 autocmd('ModeChanged', { pattern = '\022:i', group = group, callback = attach })
+autocmd('ModeChanged', { pattern = '*:\022', group = group, callback = attach_key })
 autocmd('InsertLeave', { pattern = '*', group = group, callback = detach })
 autocmd('CursorMoved', { pattern = '*', group = group, callback = update_pos })
 vim.schedule(update_pos)
