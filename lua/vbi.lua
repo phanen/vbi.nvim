@@ -29,7 +29,8 @@ local attach = function()
       -- TODO: diff? what's the actual behavior when feed <left>/<right>
       local col = api.nvim_win_get_cursor(0)[2]
       local text = line:sub(start_col, col)
-      local pos_type = is_eol() and 'eol' or 'inline'
+      local eol = is_eol()
+      local pos_type = eol and 'eol' or 'inline'
       for row = start_row, end_row do
         local idx = row - start_row
         local r = vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, start_col - 1, {
@@ -40,6 +41,14 @@ local attach = function()
         if r then
           marks[idx] = r
         else -- TODO: virtualedit=all?
+          assert(not eol)
+          local len = api.nvim_buf_get_lines(0, row, row + 1, true)[1]:len()
+          local pad = (' '):rep(start_col - len - 1)
+          marks[idx] = assert(vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, len, {
+            id = marks[idx],
+            virt_text = { { pad .. text, hl } },
+            virt_text_pos = 'eol',
+          }))
         end
       end
     end,
