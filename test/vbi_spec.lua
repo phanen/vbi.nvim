@@ -19,14 +19,14 @@ describe('main', function()
       vim.o.sol = false -- this change `<c-q>G` behavior
       vim.cmd.runtime { 'plugin/vbi.lua', bang = true }
     end)
-  end)
-  it('chore', function()
     n.api.nvim_buf_set_lines(0, 0, -1, false, {
       'aaaaa',
       'bbbbbbbbbbbb',
       'cccccccccccccc',
       'ddd',
     })
+  end)
+  it('chore', function()
     n.feed('<c-q>GIabc')
     screen:expect {
       grid = [[
@@ -48,7 +48,7 @@ describe('main', function()
       ]],
     }
 
-    n.feed('gv2l<esc>dgv')
+    n.feed('dgv..')
     screen:expect {
       grid = [[
         ^aaaaa                         |
@@ -120,6 +120,28 @@ describe('main', function()
         bbbbbbbAbIbbbbxyz             |
         cccccccAcIccccccxyz           |
         dddxyz A                      |
+                                      |
+      ]],
+    }
+  end)
+  it('c<c-q>G', function()
+    n.feed('c<c-q>Gabc')
+    screen:expect {
+      grid = [[
+        abc^aaaa                       |
+        {1:abc}bbbbbbbbbbb                |
+        {1:abc}ccccccccccccc              |
+        {1:abc}dd                         |
+        {2:-- INSERT --}                  |
+      ]],
+    }
+    n.feed('<esc>')
+    screen:expect {
+      grid = [[
+        ab^caaaa                       |
+        abcbbbbbbbbbbb                |
+        abcccccccccccccc              |
+        abcdd                         |
                                       |
       ]],
     }

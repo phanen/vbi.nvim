@@ -104,6 +104,7 @@ local attach = function()
 end
 
 autocmd('ModeChanged', { pattern = '\022:i', group = group, callback = attach })
+autocmd('ModeChanged', { pattern = 'no\022:i', group = group, callback = attach })
 autocmd('ModeChanged', { pattern = '*:\022', group = group, callback = attach_key })
 autocmd('InsertLeave', { pattern = '*', group = group, callback = detach })
 autocmd('CursorMoved', { pattern = '*', group = group, callback = update_pos })
