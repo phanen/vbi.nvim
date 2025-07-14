@@ -40,12 +40,15 @@ local attach = function()
   end
   local icol
   if append then
-    local region = fn.getregionpos(vspos, vepos, { type = '\022' })
     -- vscol/vecol may clamp to the end (when cursor at left-top, right-bot)
+    local region = fn.getregionpos(vspos, vepos, { type = '\022' })
     icol = math.max(vscol, vecol, region[1][2][3], region[#region][2][3]) + 1
   else
-    icol = math.min(vscol, vecol)
+    icol = math.min(u.pp(vscol, vecol))
+    -- u.pp(icol, vscol, vecol, region[1][1], region[#region][1])
   end
+  local region = fn.getregionpos(vspos, vepos, { type = '\022' })
+  vim.print(region[1], region[#region])
   -- local cursor = api.nvim_win_get_cursor(0)
   -- local origin_line = api.nvim_get_current_line()
   local hl = 'Substitute'
@@ -63,17 +66,19 @@ local attach = function()
       -- TODO: diff? what's the actual behavior when feed <left>/<right>
       local ccol = api.nvim_win_get_cursor(0)[2]
       local text = api.nvim_get_current_line():sub(icol, ccol)
-      local pos_type = eol and 'overlay' or 'inline'
       -- u.pp(text, icol, ccol, vscol, vecol)
       local srow = math.max(fn.line('w0'), vsrow)
       local erow = math.min(fn.line('w$') - 1, verow - 1)
       for row = srow, erow do
-        local idx = row - vsrow
-        local r = vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, icol - 1, {
-          id = marks[idx],
-          virt_text = { { text, hl } },
-          virt_text_pos = pos_type,
-        })
+        local idx = row - srow
+        local r
+        if not eol then
+          r = vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, icol - 1, {
+            id = marks[idx],
+            virt_text = { { text, hl } },
+            virt_text_pos = 'overlay',
+          })
+        end
         if not append then
           if not r and marks[idx] then api.nvim_buf_del_extmark(0, ns, marks[idx]) end
           marks[idx] = r
@@ -87,7 +92,7 @@ local attach = function()
                 return assert(vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, ecol, {
                   id = marks[idx],
                   virt_text = { { pad .. text, hl } },
-                  virt_text_pos = 'overlay',
+                  virt_text_pos = 'inline',
                 }))
               elseif marks[idx] then
                 api.nvim_buf_del_extmark(0, ns, marks[idx])
