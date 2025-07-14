@@ -34,23 +34,23 @@ local attach = function()
   local vspos, vepos = fn.getpos("'<"), fn.getpos("'>")
   local vsrow, vscol, verow, vecol = vspos[2], vspos[3], vepos[2], vepos[3]
   local eol = is_eol()
-  local vmincol, vmaxcol = vscol, vecol
-  if not eol and vmincol > vmaxcol then
-    vmincol, vmaxcol = vmaxcol, vmincol
-  end
   local icol
-  if append then
-    -- vscol/vecol may clamp to the end (when cursor at left-top, right-bot)
-    local region = fn.getregionpos(vspos, vepos, { type = '\022' })
-    icol = math.max(vscol, vecol, region[1][2][3], region[#region][2][3]) + 1
-  else
-    icol = math.min(u.pp(vscol, vecol))
-    -- u.pp(icol, vscol, vecol, region[1][1], region[#region][1])
-  end
   local region = fn.getregionpos(vspos, vepos, { type = '\022' })
-  vim.print(region[1], region[#region])
-  -- local cursor = api.nvim_win_get_cursor(0)
-  -- local origin_line = api.nvim_get_current_line()
+  if append then -- vscol/vecol may clamp to the end (when cursor at left-top, right-bot)
+    icol = math.max(region[1][2][3], region[#region][2][3]) + 1
+  else -- when min start clamp to the end, we use max start
+    icol = math.min(vscol, vecol)
+    local m = math.min(region[1][1][3], region[#region][1][3])
+    if icol > m then
+      icol = math.max(region[1][1][3], region[#region][1][3])
+      for i = 1, #region do
+        if icol ~= m then break end
+        icol = math.max(icol, region[i][1][3])
+      end
+    end
+  end
+  -- local cursor = api.nvim_win_get_ciewfiwefjursor(0)
+  -- local origin_line = api.nvim_get_iewfiwefjcurrent_line()
   local hl = 'Substitute'
     or (function()
       local ctx = vim.inspect_pos()
@@ -76,7 +76,7 @@ local attach = function()
           r = vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, icol - 1, {
             id = marks[idx],
             virt_text = { { text, hl } },
-            virt_text_pos = 'overlay',
+            virt_text_pos = 'inline',
           })
         end
         if not append then
