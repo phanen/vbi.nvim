@@ -1,3 +1,7 @@
+if not vim.o.ve:match('[ba]') then
+  print('[vbi] se ve=block or se ve=all')
+  return
+end
 local api, fn = vim.api, vim.fn
 local autocmd = api.nvim_create_autocmd
 local ns = api.nvim_create_namespace('u.vbi')
@@ -10,59 +14,10 @@ local is_eol = function() return pos[5] == vim.v.maxcol end
 
 local last_key
 local attach_key = function()
-  vim.on_key(function(k, r) last_key = k end, ns)
+  vim.on_key(function(k, _) last_key = k end, ns)
 end
 local detach_key = function() vim.on_key(nil, ns) end
 local is_append = function() return last_key == 'A' end
-
-local attach = function()
-  attach_key()
-  local start_pos = fn.getpos("'<")
-  local end_pos = fn.getpos("'>")
-  local start_row, start_col, end_row, _ = start_pos[2], start_pos[3], end_pos[2] - 1, end_pos[3]
-  -- local cursor = api.nvim_win_get_cursor(0)
-  -- local origin_line = api.nvim_get_current_line()
-  local hl = 'Substitute'
-    or (function()
-      local ctx = vim.inspect_pos()
-      return vim.tbl_get(ctx, 'semantic_tokens', 1, 'opts', 'hl_group_link')
-        or vim.tbl_get(ctx, 'treesitter', 1, 'hl_group_link')
-        or '@variable'
-    end)()
-  local marks = {}
-  local append = is_append()
-  if auid then api.nvim_del_autocmd(auid) end
-  auid = autocmd({ 'TextChangedI', 'CursorMovedI' }, {
-    group = group,
-    callback = function(ev)
-      local line = api.nvim_get_current_line()
-      -- TODO: diff? what's the actual behavior when feed <left>/<right>
-      local col = api.nvim_win_get_cursor(0)[2]
-      local eol = is_eol()
-      local text = line:sub(start_col + (append and 1 or 0), col)
-      local pos_type = eol and 'eol' or 'inline'
-      for row = start_row, end_row do
-        local idx = row - start_row
-        local r = vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, start_col - 1, {
-          id = marks[idx],
-          virt_text = { { text, hl } },
-          virt_text_pos = pos_type,
-        })
-        if r then
-          marks[idx] = r
-        elseif append then
-          local len = api.nvim_buf_get_lines(0, row, row + 1, true)[1]:len()
-          local pad = (' '):rep(start_col - len - 1)
-          marks[idx] = assert(vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, len, {
-            id = marks[idx],
-            virt_text = { { pad .. text, hl } },
-            virt_text_pos = 'eol',
-          }))
-        end
-      end
-    end,
-  })
-end
 
 local detach = function()
   if auid then
@@ -71,6 +26,78 @@ local detach = function()
   end
   api.nvim_buf_clear_namespace(0, ns, 0, -1)
   detach_key()
+end
+
+local attach = function()
+  detach()
+  local append = is_append()
+  local vspos, vepos = fn.getpos("'<"), fn.getpos("'>")
+  local vsrow, vscol, verow, vecol = vspos[2], vspos[3], vepos[2], vepos[3]
+  local eol = is_eol()
+  local icol
+  local region = fn.getregionpos(vspos, vepos, { type = '\022' })
+  if append then -- vscol/vecol may clamp to the end (when cursor at left-top, right-bot)
+    icol = math.max(region[1][2][3], region[#region][2][3]) + 1
+  else -- when min start clamp to the end, we use max start
+    icol = math.min(vscol, vecol)
+    local m = math.min(region[1][1][3], region[#region][1][3])
+    if icol > m then
+      icol = math.max(region[1][1][3], region[#region][1][3])
+      for i = 1, #region do
+        if icol ~= m then break end
+        icol = math.max(icol, region[i][1][3])
+      end
+    end
+  end
+  local hl = 'Substitute'
+    or (function()
+      local ctx = vim.inspect_pos()
+      return vim.tbl_get(ctx, 'semantic_tokens', 1, 'opts', 'hl_group_link')
+        or vim.tbl_get(ctx, 'treesitter', 1, 'hl_group_link')
+        or '@variable'
+    end)()
+  local marks = {}
+  ---@diagnostic disable-next-line: assign-type-mismatch, param-type-mismatch
+  auid = autocmd({ 'TextChangedI', 'CursorMovedI' }, {
+    group = group,
+    callback = function()
+      -- TODO: diff? what's the actual behavior when feed <left>/<right>
+      local ccol = api.nvim_win_get_cursor(0)[2]
+      local text = api.nvim_get_current_line():sub(icol, ccol)
+      local srow = math.max(fn.line('w0'), vsrow)
+      local erow = math.min(fn.line('w$') - 1, verow - 1)
+      for row = srow, erow do
+        local idx = row - srow
+        local r
+        if not eol then
+          r = vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, icol - 1, {
+            id = marks[idx],
+            virt_text = { { text, hl } },
+            virt_text_pos = 'inline',
+          })
+        end
+        if not append then
+          if not r and marks[idx] then api.nvim_buf_del_extmark(0, ns, marks[idx]) end
+          marks[idx] = r
+        elseif append then
+          marks[idx] = r
+            or (function()
+              local ecol = api.nvim_buf_get_lines(0, row, row + 1, true)[1]:len()
+              local pad = eol and '' or (' '):rep(icol - ecol - 1)
+              if #text > 0 then
+                return assert(vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, ecol, {
+                  id = marks[idx],
+                  virt_text = { { pad .. text, hl } },
+                  virt_text_pos = 'inline',
+                }))
+              elseif marks[idx] then
+                api.nvim_buf_del_extmark(0, ns, marks[idx])
+              end
+            end)()
+        end
+      end
+    end,
+  })
 end
 
 autocmd('ModeChanged', { pattern = '\022:i', group = group, callback = attach })
