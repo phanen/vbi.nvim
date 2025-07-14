@@ -28,19 +28,22 @@ local detach = function()
   detach_key()
 end
 
-local attach = function()
+local attach = function(ev)
   detach()
   local append = is_append()
   local vspos, vepos = fn.getpos("'<"), fn.getpos("'>")
   local vsrow, vscol, verow, vecol = vspos[2], vspos[3], vepos[2], vepos[3]
   local eol = is_eol()
   local icol
-  local region = fn.getregionpos(vspos, vepos, { type = '\022' })
   if eol then -- <c-q>j$Axx
     icol = api.nvim_win_get_cursor(0)[2] + 1
   elseif append then -- vscol/vecol may clamp to the end (when cursor at left-top, right-bot)
+    local region = fn.getregionpos(vspos, vepos, { type = '\022' })
     icol = math.max(vscol, vecol, region[1][2][3], region[#region][2][3]) + 1
+  elseif ev.match == 'no\022:i' then
+    icol = math.min(vscol, vecol)
   else -- when min start clamp to the end, we use max start
+    local region = fn.getregionpos(vspos, vepos, { type = '\022' })
     icol = math.min(vscol, vecol)
     local m = math.min(region[1][1][3], region[#region][1][3])
     if icol > m then

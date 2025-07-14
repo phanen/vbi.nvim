@@ -12,6 +12,7 @@ describe('main', function()
     screen:set_default_attr_ids({
       [1] = { background = Screen.colors.NvimLightYellow, foreground = Screen.colors.NvimDarkGrey1 },
       [2] = { foreground = Screen.colors.NvimDarkGreen },
+      [3] = { foreground = Screen.colors.NvimLightGray1, background = Screen.colors.NvimDarkYellow },
     })
     exec_lua(function() ---@diagnostic disable-next-line: duplicate-set-field
       vim.opt.rtp:append('.')
@@ -143,6 +144,31 @@ describe('main', function()
         abcccccccccccccc              |
         abcdd                         |
                                       |
+      ]],
+    }
+  end)
+
+  it('c<c-q>/', function()
+    -- c<c-q>gn, c<c-q>gv don't work...
+    -- not useful: c<c-q>%, c<c-q>}
+    n.feed('c<c-q>ipabc<esc>')
+    screen:expect {
+      grid = [[
+        ab^caaaa                       |
+        abcbbbbbbbbbbb                |
+        abcccccccccccccc              |
+        abcdd                         |
+                                      |
+      ]],
+    }
+    n.feed('goc<c-q>/d<cr>kaka')
+    screen:expect {
+      grid = [[
+        kaka^aaa                       |
+        {1:kaka}bbbbbbbbbb                |
+        {1:kaka}cccccccccccc              |
+        {1:kakad}                         |
+        {2:-- INSERT --}                  |
       ]],
     }
   end)
