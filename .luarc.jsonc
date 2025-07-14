@@ -14,18 +14,18 @@
 	},
 	"diagnostics": {
 		"libraryFiles": "Disable",
-		// "groupFileStatus": {
-		// 	"strict": "Opened",
-		// 	"strong": "Opened",
-		// 	"ambiguity": "Opened",
-		// 	"duplicate": "Opened",
-		// 	"global": "Opened",
-		// 	"luadoc": "Opened",
-		// 	"redefined": "Opened",
-		// 	"type-check": "Opened",
-		// 	"unbalanced": "Opened",
-		// 	"unused": "Opened"
-		// },
+		"groupFileStatus": {
+			"strict": "Opened",
+			"strong": "Opened",
+			"ambiguity": "Opened",
+			"duplicate": "Opened",
+			"global": "Opened",
+			"luadoc": "Opened",
+			"redefined": "Opened",
+			"type-check": "Opened",
+			"unbalanced": "Opened",
+			"unused": "Opened"
+		},
 		"groupSeverity": {
 			"strong": "Warning",
 			"strict": "Warning"

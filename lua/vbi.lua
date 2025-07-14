@@ -6,13 +6,13 @@ local api, fn = vim.api, vim.fn
 local autocmd = api.nvim_create_autocmd
 local ns = api.nvim_create_namespace('u.vbi')
 local group = api.nvim_create_augroup('u.vbi', { clear = true })
-local auid
+local auid ---@type integer?
 
-local pos
+local pos ---@type [integer, integer, integer, integer, integer]
 local update_pos = function() pos = fn.getcurpos() end
 local is_eol = function() return pos[5] == vim.v.maxcol end
 
-local last_key
+local last_key ---@type string
 local attach_key = function()
   vim.on_key(function(k, _) last_key = k end, ns)
 end
@@ -34,7 +34,7 @@ local attach = function(ev)
   local vspos, vepos = fn.getpos("'<"), fn.getpos("'>")
   local vsrow, vscol, verow, vecol = vspos[2], vspos[3], vepos[2], vepos[3]
   local eol = is_eol()
-  local icol
+  local icol ---@type integer
   if eol then -- <c-q>j$Axx
     icol = api.nvim_win_get_cursor(0)[2] + 1
   elseif append then -- vscol/vecol may clamp to the end (when cursor at left-top, right-bot)
@@ -63,7 +63,7 @@ local attach = function(ev)
     end)()
   local line = api.nvim_buf_get_lines(0, vsrow - 1, vsrow, true)[1]
   local scol = api.nvim_win_get_cursor(0)[2]
-  local marks = {}
+  local marks = {} ---@type { [integer]: integer? }
   ---@diagnostic disable-next-line: assign-type-mismatch, param-type-mismatch
   auid = autocmd({ 'TextChangedI', 'CursorMovedI' }, {
     group = group,
@@ -74,7 +74,7 @@ local attach = function(ev)
       local erow = math.min(fn.line('w$') - 1, verow - 1)
       for row = srow, erow do
         local idx = row - srow
-        local r
+        local r ---@type integer?
         if not eol then
           r = vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, icol - 1, {
             id = marks[idx],
