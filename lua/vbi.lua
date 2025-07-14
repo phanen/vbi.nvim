@@ -1,3 +1,7 @@
+if not vim.o.virtualedit:match('[ba]') then
+  print('[vbi] set virtualedit=block')
+  return
+end
 local api, fn = vim.api, vim.fn
 local autocmd = api.nvim_create_autocmd
 local ns = api.nvim_create_namespace('u.vbi')
@@ -27,14 +31,18 @@ end
 local attach = function()
   detach()
   local append = is_append()
-  local start_pos, end_pos = fn.getpos("'<"), fn.getpos("'>")
-  local start_row, start_col, end_row, end_col = start_pos[2], start_pos[3], end_pos[2], end_pos[3]
+  local vspos, vepos = fn.getpos("'<"), fn.getpos("'>")
+  local vsrow, vscol, verow, vecol = vspos[2], vspos[3], vepos[2], vepos[3]
   local eol = is_eol()
-  u.pp({ start_row, start_col }, { end_row, end_col })
-  if not eol and start_col > end_col then
-    start_col, end_col = end_col, start_col
+  if not eol and vscol > vecol then
+    vscol, vecol = vecol, vscol
   end
-  local col = append and end_col + 1 or start_col
+  -- vim.o.virtualedit:match('[ba]')
+  local icol = append and vecol + 1 or vscol
+  local maxcol = math.max(
+    api.nvim_buf_get_lines(0, vsrow - 1, vsrow, true)[1]:len(),
+    api.nvim_buf_get_lines(0, verow - 1, verow, true)[1]:len()
+  )
   -- local cursor = api.nvim_win_get_cursor(0)
   -- local origin_line = api.nvim_get_current_line()
   local hl = 'Substitute'
@@ -51,12 +59,14 @@ local attach = function()
     callback = function()
       -- TODO: diff? what's the actual behavior when feed <left>/<right>
       local ccol = api.nvim_win_get_cursor(0)[2]
-      local text = api.nvim_get_current_line():sub(col, ccol)
+      local text = api.nvim_get_current_line():sub(icol, ccol)
       local pos_type = eol and 'overlay' or 'inline'
-      u.pp(text, col, ccol, start_col, end_col)
-      for row = math.max(fn.line('w0'), start_row), math.min(fn.line('w$') - 1, end_row - 1) do
-        local idx = row - start_row
-        local r = vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, col - 1, {
+      u.pp(text, icol, ccol, vscol, vecol)
+      local srow = math.max(fn.line('w0'), vsrow)
+      local erow = math.min(fn.line('w$') - 1, verow - 1)
+      for row = srow, erow do
+        local idx = row - vsrow
+        local r = vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, icol - 1, {
           id = marks[idx],
           virt_text = { { text, hl } },
           virt_text_pos = pos_type,
@@ -68,7 +78,8 @@ local attach = function()
           marks[idx] = r
             or (function()
               local ecol = api.nvim_buf_get_lines(0, row, row + 1, true)[1]:len()
-              local pad = eol and '' or (' '):rep(col - ecol - 1)
+              local pad = eol and '' or (' '):rep(icol - ecol - 1)
+              -- (row == srow or row == erow)
               if #text > 0 then
                 return assert(vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, ecol, {
                   id = marks[idx],
