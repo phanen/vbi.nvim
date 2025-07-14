@@ -13,11 +13,12 @@ local update_pos = function() pos = fn.getcurpos() end
 local is_eol = function() return pos[5] == vim.v.maxcol end
 
 local last_key ---@type string
-local attach_key = function()
+local attach_key = function() -- currently only consider v-block->insert
   vim.on_key(function(k, _) last_key = k end, ns)
 end
 local detach_key = function() vim.on_key(nil, ns) end
 local is_append = function() return last_key == 'A' end
+local is_change = function() return last_key and last_key:find('[scC]') and true or false end
 
 local detach = function()
   if auid then
@@ -33,14 +34,17 @@ local attach = function(ev)
   local append = is_append()
   local vspos, vepos = fn.getpos("'<"), fn.getpos("'>")
   local vsrow, vscol, verow, vecol = vspos[2], vspos[3], vepos[2], vepos[3]
-  local eol = is_eol()
+  local nov2i = ev.match == 'no\022:i' -- c<c-q>xx can never append to eol
+  local change = is_change()
+  local eol = not nov2i and is_eol() and append -- `<c-q>$jjjc` is not "eol"
+  -- local eol = not nov2i and is_eol()
   local icol ---@type integer
   if eol then -- <c-q>j$Axx
     icol = api.nvim_win_get_cursor(0)[2] + 1
   elseif append then -- vscol/vecol may clamp to the end (when cursor at left-top, right-bot)
     local region = fn.getregionpos(vspos, vepos, { type = '\022' })
     icol = math.max(vscol, vecol, region[1][2][3], region[#region][2][3]) + 1
-  elseif ev.match == 'no\022:i' then
+  elseif nov2i or change then
     icol = math.min(vscol, vecol)
   else -- when min start clamp to the end, we use max start
     local region = fn.getregionpos(vspos, vepos, { type = '\022' })
@@ -82,32 +86,26 @@ local attach = function(ev)
             virt_text_pos = 'inline',
           })
         end
-        if not append then
-          if not r and marks[idx] then api.nvim_buf_del_extmark(0, ns, marks[idx]) end
-          marks[idx] = r
-        elseif append then
-          marks[idx] = r
-            or (function()
-              local ecol = api.nvim_buf_get_lines(0, row, row + 1, true)[1]:len()
-              local pad = eol and '' or (' '):rep(icol - ecol - 1)
-              if #text > 0 then
-                return assert(vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, ecol, {
-                  id = marks[idx],
-                  virt_text = { { pad .. text, hl } },
-                  virt_text_pos = 'inline',
-                }))
-              elseif marks[idx] then
-                api.nvim_buf_del_extmark(0, ns, marks[idx])
-              end
-            end)()
+        if not r and append then -- handle "cliff" or eol
+          local ecol = api.nvim_buf_get_lines(0, row, row + 1, true)[1]:len()
+          local pad = eol and '' or (' '):rep(icol - ecol - 1)
+          if #text > 0 then
+            r = assert(api.nvim_buf_set_extmark(0, ns, row, ecol, {
+              id = marks[idx],
+              virt_text = { { pad .. text, hl } },
+              virt_text_pos = 'inline',
+            }))
+          end
         end
+        if not r and marks[idx] then api.nvim_buf_del_extmark(0, ns, marks[idx]) end
+        marks[idx] = r
       end
     end,
   })
 end
 
 autocmd('ModeChanged', { pattern = '\022:i', group = group, callback = attach })
-autocmd('ModeChanged', { pattern = 'no\022:i', group = group, callback = attach })
+autocmd('ModeChanged', { pattern = 'no\022:i', group = group, callback = attach }) -- NOTE: with this, last_key may be nil
 autocmd('ModeChanged', { pattern = '*:\022', group = group, callback = attach_key })
 autocmd('InsertLeave', { pattern = '*', group = group, callback = detach })
 autocmd('CursorMoved', { pattern = '*', group = group, callback = update_pos })

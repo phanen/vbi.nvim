@@ -171,5 +171,60 @@ describe('main', function()
         {2:-- INSERT --}                  |
       ]],
     }
+
+    n.feed('<esc>')
+    screen:expect {
+      grid = [[
+        kak^aaaa                       |
+        kakabbbbbbbbbb                |
+        kakacccccccccccc              |
+        kaka{1:d}                         |
+        /d                     [1/2]  |
+      ]],
+    }
+  end)
+
+  it('<c-q>c', function()
+    n.feed('$<c-q>Gckkk')
+    screen:expect {
+      grid = [[
+        aaakkk^                        |
+        bbb{1:kkk}                        |
+        ccc{1:kkk}                        |
+        ddd{1:kkk}                        |
+        {2:-- INSERT --}                  |
+      ]],
+    }
+    n.feed('<esc>')
+    screen:expect {
+      grid = [[
+        aaakk^k                        |
+        bbbkkk                        |
+        ccckkk                        |
+        dddkkk                        |
+                                      |
+      ]],
+    }
+
+    n.feed('go<c-q>GC')
+    screen:expect {
+      grid = [[
+        ^                              |
+                                      |
+                                      |
+                                      |
+        {2:-- INSERT --}                  |
+      ]],
+    }
+    n.feed('foo')
+    screen:expect {
+      grid = [[
+        foo^                           |
+        {1:foo}                           |
+        {1:foo}                           |
+        {1:foo}                           |
+        {2:-- INSERT --}                  |
+      ]],
+    }
   end)
 end)
