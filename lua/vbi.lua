@@ -58,14 +58,15 @@ local attach = function()
         or vim.tbl_get(ctx, 'treesitter', 1, 'hl_group_link')
         or '@variable'
     end)()
+  local line = api.nvim_buf_get_lines(0, vsrow - 1, vsrow, true)[1]
+  local scol = api.nvim_win_get_cursor(0)[2]
   local marks = {}
   ---@diagnostic disable-next-line: assign-type-mismatch, param-type-mismatch
   auid = autocmd({ 'TextChangedI', 'CursorMovedI' }, {
     group = group,
     callback = function()
-      -- TODO: diff? what's the actual behavior when feed <left>/<right>
-      local ccol = api.nvim_win_get_cursor(0)[2]
-      local text = api.nvim_get_current_line():sub(icol, ccol)
+      local newline = api.nvim_get_current_line()
+      local text = newline:sub(icol, #newline - #line + scol)
       local srow = math.max(fn.line('w0'), vsrow)
       local erow = math.min(fn.line('w$') - 1, verow - 1)
       for row = srow, erow do
