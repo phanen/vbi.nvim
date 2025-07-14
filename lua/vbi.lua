@@ -1,5 +1,5 @@
 if not vim.o.ve:match('[ba]') then
-  print('[vbi] se ve=block or se ve=all')
+  print('[vbi] `:se ve=block` or `:se ve=all`')
   return
 end
 local api, fn = vim.api, vim.fn
