@@ -1,5 +1,5 @@
-if not vim.o.virtualedit:match('[ba]') then
-  print('[vbi] set virtualedit=block')
+if not vim.o.ve:match('[ba]') then
+  print('[vbi] se ve=block or se ve=all')
   return
 end
 local api, fn = vim.api, vim.fn
@@ -34,15 +34,18 @@ local attach = function()
   local vspos, vepos = fn.getpos("'<"), fn.getpos("'>")
   local vsrow, vscol, verow, vecol = vspos[2], vspos[3], vepos[2], vepos[3]
   local eol = is_eol()
-  if not eol and vscol > vecol then
-    vscol, vecol = vecol, vscol
+  local vmincol, vmaxcol = vscol, vecol
+  if not eol and vmincol > vmaxcol then
+    vmincol, vmaxcol = vmaxcol, vmincol
   end
-  -- vim.o.virtualedit:match('[ba]')
-  local icol = append and vecol + 1 or vscol
-  local maxcol = math.max(
-    api.nvim_buf_get_lines(0, vsrow - 1, vsrow, true)[1]:len(),
-    api.nvim_buf_get_lines(0, verow - 1, verow, true)[1]:len()
-  )
+  local icol
+  if append then
+    local region = fn.getregionpos(vspos, vepos, { type = '\022' })
+    -- vscol/vecol may clamp to the end (when cursor at left-top, right-bot)
+    icol = math.max(vscol, vecol, region[1][2][3], region[#region][2][3]) + 1
+  else
+    icol = math.min(vscol, vecol)
+  end
   -- local cursor = api.nvim_win_get_cursor(0)
   -- local origin_line = api.nvim_get_current_line()
   local hl = 'Substitute'
@@ -61,7 +64,7 @@ local attach = function()
       local ccol = api.nvim_win_get_cursor(0)[2]
       local text = api.nvim_get_current_line():sub(icol, ccol)
       local pos_type = eol and 'overlay' or 'inline'
-      u.pp(text, icol, ccol, vscol, vecol)
+      -- u.pp(text, icol, ccol, vscol, vecol)
       local srow = math.max(fn.line('w0'), vsrow)
       local erow = math.min(fn.line('w$') - 1, verow - 1)
       for row = srow, erow do
