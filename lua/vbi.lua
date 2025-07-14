@@ -29,8 +29,16 @@ local detach = function()
   detach_key()
 end
 
+local ctrl_c = api.nvim_replace_termcodes('<c-c>', true, true, true)
+local attach_ctrl_c = function()
+  vim.on_key(function(key)
+    if key == ctrl_c then detach() end
+  end)
+end
+
 local attach = function(ev)
   detach()
+  attach_ctrl_c()
   local append = is_append()
   local vspos, vepos = fn.getpos("'<"), fn.getpos("'>")
   local vsrow, vscol, verow, vecol = vspos[2], vspos[3], vepos[2], vepos[3]

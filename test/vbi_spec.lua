@@ -226,5 +226,39 @@ describe('main', function()
         {2:-- INSERT --}                  |
       ]],
     }
+
+    n.feed('<c-c>')
+    screen:expect {
+      grid = [[
+        fo^o                           |
+                                      |
+                                      |
+                                      |
+                                      |
+      ]],
+    }
+  end)
+
+  it('<c-c>', function()
+    n.feed('<c-q>GIabc')
+    screen:expect {
+      grid = [[
+        abc^aaaaa                      |
+        {1:abc}bbbbbbbbbbbb               |
+        {1:abc}cccccccccccccc             |
+        {1:abc}ddd                        |
+        {2:-- INSERT --}                  |
+      ]],
+    }
+    n.feed('<c-c><esc>')
+    screen:expect {
+      grid = [[
+        ab^caaaaa                      |
+        bbbbbbbbbbbb                  |
+        cccccccccccccc                |
+        ddd                           |
+                                      |
+      ]],
+    }
   end)
 end)
