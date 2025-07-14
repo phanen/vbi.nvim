@@ -39,9 +39,7 @@ local attach = function()
       -- TODO: diff? what's the actual behavior when feed <left>/<right>
       local col = api.nvim_win_get_cursor(0)[2]
       local eol = is_eol()
-      local text = line:sub(start_col + (append and 1 or 0), col)
-      local pos_type = eol and 'eol' or 'inline'
-      for row = start_row, end_row do
+      for row = math.max(fn.line('w0'), start_row), math.min(fn.line('w$') - 1, end_row) do
         local idx = row - start_row
         local r = vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, start_col - 1, {
           id = marks[idx],
