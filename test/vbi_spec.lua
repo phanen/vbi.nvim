@@ -261,4 +261,17 @@ describe('main', function()
       ]],
     }
   end)
+
+  it('cgv', function()
+    n.feed('<c-q>G<esc>cgvabc')
+    screen:expect {
+      grid = [[
+        abc^aaaa                       |
+        {1:abc}bbbbbbbbbbb                |
+        {1:abc}ccccccccccccc              |
+        {1:abc}dd                         |
+        {2:-- INSERT --}                  |
+      ]],
+    }
+  end)
 end)
