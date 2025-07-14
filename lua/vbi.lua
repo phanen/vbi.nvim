@@ -28,9 +28,13 @@ local attach = function()
   detach()
   local append = is_append()
   local start_pos, end_pos = fn.getpos("'<"), fn.getpos("'>")
-  local start_row, start_col, end_row, end_col =
-    start_pos[2], start_pos[3], end_pos[2] - 1, end_pos[3]
-  local col = append and end_col or start_col
+  local start_row, start_col, end_row, end_col = start_pos[2], start_pos[3], end_pos[2], end_pos[3]
+  local eol = is_eol()
+  u.pp({ start_row, start_col }, { end_row, end_col })
+  if not eol and start_col > end_col then
+    start_col, end_col = end_col, start_col
+  end
+  local col = append and end_col + 1 or start_col
   -- local cursor = api.nvim_win_get_cursor(0)
   -- local origin_line = api.nvim_get_current_line()
   local hl = 'Substitute'
@@ -44,35 +48,37 @@ local attach = function()
   ---@diagnostic disable-next-line: assign-type-mismatch, param-type-mismatch
   auid = autocmd({ 'TextChangedI', 'CursorMovedI' }, {
     group = group,
-    callback = function(ev)
-      local line = api.nvim_get_current_line()
+    callback = function()
       -- TODO: diff? what's the actual behavior when feed <left>/<right>
       local ccol = api.nvim_win_get_cursor(0)[2]
-      local eol = is_eol()
-      local text = line:sub(col, ccol)
+      local text = api.nvim_get_current_line():sub(col, ccol)
       local pos_type = eol and 'overlay' or 'inline'
-      for row = math.max(fn.line('w0'), start_row), math.min(fn.line('w$') - 1, end_row) do
+      u.pp(text, col, ccol, start_col, end_col)
+      for row = math.max(fn.line('w0'), start_row), math.min(fn.line('w$') - 1, end_row - 1) do
         local idx = row - start_row
+        local r = vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, col - 1, {
+          id = marks[idx],
+          virt_text = { { text, hl } },
+          virt_text_pos = pos_type,
+        })
         if not append then
-          marks[idx] = vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, col - 1, {
-            id = marks[idx],
-            virt_text = { { text, hl } },
-            virt_text_pos = pos_type,
-          })
+          if not r and marks[idx] then api.nvim_buf_del_extmark(0, ns, marks[idx]) end
+          marks[idx] = r
         elseif append then
-          marks[idx] = vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, col + 3, {
-            id = marks[idx],
-            virt_text = { { text, hl } },
-            virt_text_pos = pos_type,
-          })
-          -- local ecol = api.nvim_buf_get_lines(0, row, row + 1, true)[1]:len()
-          -- local pad = eol and '' or (' '):rep(col - ecol - 2)
-          -- local col0 = eol and ecol - 1 or ecol
-          -- marks[idx] = assert(vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, col0 + 1, {
-          --   id = marks[idx],
-          --   virt_text = { { pad .. text, hl } },
-          --   virt_text_pos = 'overlay',
-          -- }))
+          marks[idx] = r
+            or (function()
+              local ecol = api.nvim_buf_get_lines(0, row, row + 1, true)[1]:len()
+              local pad = eol and '' or (' '):rep(col - ecol - 1)
+              if #text > 0 then
+                return assert(vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, ecol, {
+                  id = marks[idx],
+                  virt_text = { { pad .. text, hl } },
+                  virt_text_pos = 'overlay',
+                }))
+              elseif marks[idx] then
+                api.nvim_buf_del_extmark(0, ns, marks[idx])
+              end
+            end)()
         end
       end
     end,
