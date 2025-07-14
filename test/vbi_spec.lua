@@ -273,5 +273,16 @@ describe('main', function()
         {2:-- INSERT --}                  |
       ]],
     }
+
+    n.feed('<esc>C')
+    screen:expect {
+      grid = [[
+        ab^                            |
+        abcbbbbbbbbbbb                |
+        abcccccccccccccc              |
+        abcdd                         |
+        {2:-- INSERT --}                  |
+      ]],
+    }
   end)
 end)

@@ -46,6 +46,7 @@ local attach = function(ev)
   local change = is_change()
   local eol = not nov2i and is_eol() and append -- `<c-q>$jjjc` is not "eol"
   -- local eol = not nov2i and is_eol()
+  if ev.match == 'no:i' and last_key ~= 'v' then return end -- cgv
   local icol ---@type integer
   if eol then -- <c-q>j$Axx
     icol = api.nvim_win_get_cursor(0)[2] + 1
@@ -116,6 +117,8 @@ autocmd('ModeChanged', { pattern = '\022:i', group = group, callback = attach })
 autocmd('ModeChanged', { pattern = 'no\022:i', group = group, callback = attach }) -- NOTE: with this, last_key may be nil
 autocmd('ModeChanged', { pattern = 'no:i', group = group, callback = attach }) -- ME TOO
 autocmd('ModeChanged', { pattern = '*:\022', group = group, callback = attach_key })
+autocmd('ModeChanged', { pattern = '*:no', group = group, callback = attach_key })
+autocmd('ModeChanged', { pattern = '\022:*', group = group, callback = detach_key })
 autocmd('InsertLeave', { pattern = '*', group = group, callback = detach })
 autocmd('CursorMoved', { pattern = '*', group = group, callback = update_pos })
 vim.schedule(update_pos)
