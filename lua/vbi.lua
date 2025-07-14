@@ -36,8 +36,10 @@ local attach = function()
   local eol = is_eol()
   local icol
   local region = fn.getregionpos(vspos, vepos, { type = '\022' })
-  if append then -- vscol/vecol may clamp to the end (when cursor at left-top, right-bot)
-    icol = math.max(region[1][2][3], region[#region][2][3]) + 1
+  if eol then -- <c-q>j$Axx
+    icol = api.nvim_win_get_cursor(0)[2] + 1
+  elseif append then -- vscol/vecol may clamp to the end (when cursor at left-top, right-bot)
+    icol = math.max(vscol, vecol, region[1][2][3], region[#region][2][3]) + 1
   else -- when min start clamp to the end, we use max start
     icol = math.min(vscol, vecol)
     local m = math.min(region[1][1][3], region[#region][1][3])
