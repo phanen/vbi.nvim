@@ -95,7 +95,7 @@ local attach = function(ev)
             virt_text_pos = 'inline',
           })
         end
-        if not r and append then -- handle "cliff" or eol
+        if not r and (append or change) then -- handle "cliff" or eol
           local ecol = api.nvim_buf_get_lines(0, row, row + 1, true)[1]:len()
           local pad = eol and '' or (' '):rep(icol - ecol - 1)
           if #text > 0 then

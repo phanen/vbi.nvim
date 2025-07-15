@@ -308,5 +308,46 @@ describe('main', function()
         {2:-- INSERT --}                  |
       ]],
     }
+
+    -- $<c-q>G<esc>cgv
+    n.feed('<esc>')
+    screen:expect {
+      grid = [[
+        a^b                            |
+        abcbbbbbbbbbbb                |
+        abcccccccccccccc              |
+        abcdd                         |
+                                      |
+      ]],
+    }
+    n.feed('$<c-q>G<esc>cgvxyz')
+    screen:expect {
+      grid = [[
+        axyz^                          |
+        a{1:xyz}                          |
+        a{1:xyz}                          |
+        a{1:xyz}                          |
+        {2:-- INSERT --}                  |
+      ]],
+    }
+
+    n.feed('<esc>')
+    -- the above test make no sense
+    n.api.nvim_buf_set_lines(0, 0, -1, false, {
+      'aaaaaaaaaaaaaaa',
+      'bb',
+      'ccc',
+      'ddddddd',
+    })
+    n.feed('$<c-q>G<esc>cgvxyz')
+    screen:expect {
+      grid = [[
+        aaaaaaaxyz^                    |
+        bb{1:     xyz}                    |
+        ccc{1:    xyz}                    |
+        ddddddd{1:xyz}                    |
+        {2:-- INSERT --}                  |
+      ]],
+    }
   end)
 end)
