@@ -99,11 +99,11 @@ local attach = function(ev)
           local ecol = api.nvim_buf_get_lines(0, row, row + 1, true)[1]:len()
           local pad = eol and '' or (' '):rep(icol - ecol - 1)
           if #text > 0 then
-            r = assert(api.nvim_buf_set_extmark(0, ns, row, ecol, {
+            r = api.nvim_buf_set_extmark(0, ns, row, ecol, {
               id = marks[idx],
               virt_text = { { pad .. text, hl } },
               virt_text_pos = 'inline',
-            }))
+            })
           end
         end
         if not r and marks[idx] then api.nvim_buf_del_extmark(0, ns, marks[idx]) end
