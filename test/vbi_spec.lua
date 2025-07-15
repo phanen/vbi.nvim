@@ -16,7 +16,7 @@ describe('main', function()
     })
     exec_lua(function() ---@diagnostic disable-next-line: duplicate-set-field
       vim.opt.rtp:append('.')
-      vim.o.ve = 'block'
+      -- vim.o.ve = 'block'
       vim.o.sol = false -- this change `<c-q>G` behavior
       vim.cmd.runtime { 'plugin/vbi.lua', bang = true }
     end)
@@ -103,6 +103,7 @@ describe('main', function()
       ]],
     }
 
+    n.api.nvim_command('se ve=block')
     n.feed('gv3lo3lII')
     screen:expect {
       grid = [[
