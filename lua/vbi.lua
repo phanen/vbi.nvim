@@ -43,10 +43,10 @@ local attach = function(ev)
   local vspos, vepos = fn.getpos("'<"), fn.getpos("'>")
   local vsrow, vscol, verow, vecol = vspos[2], vspos[3], vepos[2], vepos[3]
   local nov2i = ev.match == 'no\022:i' -- c<c-q>xx can never append to eol
-  local change = is_change()
-  local eol = not nov2i and is_eol() and append -- `<c-q>$jjjc` is not "eol"
-  -- local eol = not nov2i and is_eol()
-  if ev.match == 'no:i' and last_key ~= 'v' then return end -- cgv
+  local no2i = ev.match == 'no:i'
+  local eol = not no2i and not nov2i and is_eol() and append -- `<c-q>$jjjc` is not "eol"
+  if no2i and last_key ~= 'v' then return end -- cgv
+  local change = is_change() or nov2i or no2i
   local icol ---@type integer
   if eol then -- <c-q>j$Axx
     icol = api.nvim_win_get_cursor(0)[2] + 1

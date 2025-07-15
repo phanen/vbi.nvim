@@ -263,6 +263,18 @@ describe('main', function()
   end)
 
   it('cgv', function()
+    n.feed('cgv')
+    screen:expect { -- no error msg
+      grid = [[
+        ^aaaaa                         |
+        bbbbbbbbbbbb                  |
+        cccccccccccccc                |
+        ddd                           |
+        {2:-- INSERT --}                  |
+      ]],
+    }
+    n.feed('<esc>')
+
     n.feed('<c-q>G<esc>cgvabc')
     screen:expect {
       grid = [[
