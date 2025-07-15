@@ -45,7 +45,7 @@ local attach = function(ev)
   local nov2i = ev.match == 'no\022:i' -- c<c-q>xx can never append to eol
   local no2i = ev.match == 'no:i'
   local eol = not no2i and not nov2i and is_eol() and append -- `<c-q>$jjjc` is not "eol"
-  if no2i and last_key ~= 'v' then return end -- cgv
+  if no2i and last_key ~= 'v' or vsrow == 0 then return end -- cgv
   local change = is_change() or nov2i or no2i
   local icol ---@type integer
   if eol then -- <c-q>j$Axx

@@ -275,6 +275,18 @@ describe('main', function()
     }
     n.feed('<esc>')
 
+    n.feed('$cgv')
+    screen:expect { -- no error msg
+      grid = [[
+        aaaa^                          |
+        bbbbbbbbbbbb                  |
+        cccccccccccccc                |
+        ddd                           |
+        {2:-- INSERT --}                  |
+      ]],
+    }
+    n.feed('<esc>u_') -- idk, it eat a char
+
     n.feed('<c-q>G<esc>cgvabc')
     screen:expect {
       grid = [[
