@@ -351,4 +351,27 @@ describe('main', function()
       ]],
     }
   end)
+
+  it('<c-w>', function()
+    n.feed('<c-q>GIabc')
+    screen:expect {
+      grid = [[
+        abc^aaaaa                      |
+        {1:abc}bbbbbbbbbbbb               |
+        {1:abc}cccccccccccccc             |
+        {1:abc}ddd                        |
+        {2:-- INSERT --}                  |
+      ]],
+    }
+    n.feed('<c-w>')
+    screen:expect {
+      grid = [[
+        ^aaaaa                         |
+        bbbbbbbbbbbb                  |
+        cccccccccccccc                |
+        ddd                           |
+        {2:-- INSERT --}                  |
+      ]],
+    }
+  end)
 end)

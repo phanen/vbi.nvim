@@ -83,27 +83,19 @@ local attach = function(ev)
       local erow = math.min(fn.line('w$') - 1, verow - 1)
       for row = srow, erow do
         local idx = row - srow
-        local r ---@type integer?
-        if not eol then
-          r = vim.F.npcall(api.nvim_buf_set_extmark, 0, ns, row, icol - 1, {
+        local ecol = api.nvim_buf_get_lines(0, row, row + 1, true)[1]:len()
+        -- not eof-append -> "cliff" -> insert don't need cliff
+        local col = (not eol and icol - 1 < ecol) and icol - 1 or (append or change) and ecol or nil
+        if col and #text ~= 0 then
+          local pad = eol and '' or (' '):rep(icol - ecol - 1)
+          marks[idx] = api.nvim_buf_set_extmark(0, ns, row, col, {
             id = marks[idx],
-            virt_text = { { text, hl } },
+            virt_text = { { pad .. text, hl } },
             virt_text_pos = 'inline',
           })
+        elseif marks[idx] then
+          api.nvim_buf_del_extmark(0, ns, marks[idx])
         end
-        if not r and (append or change) then -- handle "cliff" or eol
-          local ecol = api.nvim_buf_get_lines(0, row, row + 1, true)[1]:len()
-          local pad = eol and '' or (' '):rep(icol - ecol - 1)
-          if #text > 0 then
-            r = api.nvim_buf_set_extmark(0, ns, row, ecol, {
-              id = marks[idx],
-              virt_text = { { pad .. text, hl } },
-              virt_text_pos = 'inline',
-            })
-          end
-        end
-        if not r and marks[idx] then api.nvim_buf_del_extmark(0, ns, marks[idx]) end
-        marks[idx] = r
       end
     end,
   })
