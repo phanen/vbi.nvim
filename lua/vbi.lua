@@ -85,7 +85,9 @@ local attach = function(ev)
         local idx = row - srow
         local ecol = api.nvim_buf_get_lines(0, row, row + 1, true)[1]:len()
         -- not eof-append -> "cliff" -> insert don't need cliff
-        local col = (not eol and icol - 1 < ecol) and icol - 1 or (append or change) and ecol or nil
+        local col = (not eol and icol - 1 <= ecol) and icol - 1
+          or (append or change) and ecol
+          or nil
         if col and #text ~= 0 then
           local pad = eol and '' or (' '):rep(icol - ecol - 1)
           marks[idx] = api.nvim_buf_set_extmark(0, ns, row, col, {

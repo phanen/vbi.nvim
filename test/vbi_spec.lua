@@ -374,4 +374,27 @@ describe('main', function()
       ]],
     }
   end)
+
+  it('insert at eol', function()
+    n.feed('G$gg<c-q>GIabc')
+    screen:expect {
+      grid = [[
+        aaaabc^aa                      |
+        bbb{1:abc}bbbbbbbbb               |
+        ccc{1:abc}ccccccccccc             |
+        ddd{1:abc}                        |
+        {2:-- INSERT --}                  |
+      ]],
+    }
+    n.feed('<esc>')
+    screen:expect {
+      grid = [[
+        aaa^abcaa                      |
+        bbbabcbbbbbbbbb               |
+        cccabcccccccccccc             |
+        dddabc                        |
+                                      |
+      ]],
+    }
+  end)
 end)
