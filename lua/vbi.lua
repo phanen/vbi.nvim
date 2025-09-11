@@ -71,14 +71,15 @@ local attach = function(ev)
         or '@variable'
     end)()
   local line = api.nvim_buf_get_lines(0, vsrow - 1, vsrow, true)[1]
-  local scol = api.nvim_win_get_cursor(0)[2]
+  local crow, ccol = unpack(api.nvim_win_get_cursor(0))
   local marks = {} ---@type { [integer]: integer? }
   ---@diagnostic disable-next-line: assign-type-mismatch, param-type-mismatch
   auid = autocmd({ 'TextChangedI', 'CursorMovedI' }, {
     group = group,
     callback = function()
+      if crow ~= api.nvim_win_get_cursor(0)[1] then return detach() end
       local newline = api.nvim_get_current_line()
-      local text = newline:sub(icol, #newline - #line + scol)
+      local text = newline:sub(icol, #newline - #line + ccol)
       local srow = math.max(fn.line('w0'), vsrow)
       local erow = math.min(fn.line('w$') - 1, verow - 1)
       for row = srow, erow do

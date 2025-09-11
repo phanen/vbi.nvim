@@ -397,4 +397,27 @@ describe('main', function()
       ]],
     }
   end)
+
+  it('insert newline', function()
+    n.feed('dd<c-q>GI<c-r>"xxx')
+    screen:expect {
+      grid = [[
+        aaaaa                         |
+        xxx^bbbbbbbbbbbb               |
+        cccccccccccccc                |
+        ddd                           |
+        {2:-- INSERT --}                  |
+      ]],
+    }
+    n.feed('<esc>')
+    screen:expect {
+      grid = [[
+        aaaaa                         |
+        xx^xbbbbbbbbbbbb               |
+        cccccccccccccc                |
+        ddd                           |
+                                      |
+      ]],
+    }
+  end)
 end)
