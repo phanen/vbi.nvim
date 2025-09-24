@@ -1,5 +1,7 @@
 visual block insert.
 
+Requirement: 0.11+
+
 ```sh
 cat /usr/include/stdbit.h | nvim --clean --cmd "se rtp^=$(realpath "$PWD")" --cmd 'se ve=block ft=c'
 ```

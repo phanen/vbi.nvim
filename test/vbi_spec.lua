@@ -50,6 +50,9 @@ describe('main', function()
       ]],
     }
 
+    if n.fn.has('nvim-0.12') ~= 1 then
+      pending('https://github.com/vim/vim/commit/cb27992c', function() end)
+    end
     n.feed('dgv..')
     screen:expect {
       grid = [[
@@ -174,6 +177,7 @@ describe('main', function()
       ]],
     }
 
+    if n.fn.has('nvim-0.12') ~= 1 then pending('idk', function() end) end
     n.feed('<esc>')
     screen:expect {
       grid = [[
@@ -265,6 +269,9 @@ describe('main', function()
   end)
 
   it('cgv', function()
+    if n.fn.has('nvim-0.12') ~= 1 then
+      pending('https://github.com/vim/vim/commit/cb27992c', function() end)
+    end
     n.feed('cgv')
     screen:expect { -- no error msg
       grid = [[
@@ -434,6 +441,7 @@ describe('main', function()
       ]],
     }
     n.feed('<esc>')
+    if n.fn.has('nvim-0.12') ~= 1 then pending('idk', function() end) end
     screen:expect {
       grid = [[
         xy^z                           |
