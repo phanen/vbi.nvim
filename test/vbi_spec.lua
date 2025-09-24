@@ -10,9 +10,10 @@ describe('main', function()
     screen = Screen.new(30, 5)
     screen:attach()
     screen:set_default_attr_ids({
-      [1] = { background = Screen.colors.NvimLightYellow, foreground = Screen.colors.NvimDarkGrey1 },
+      [1] = { background = Screen.colors.NvimLightYellow, foreground = Screen.colors.NvimDarkGray1 },
       [2] = { foreground = Screen.colors.NvimDarkGreen },
-      [3] = { foreground = Screen.colors.NvimLightGray1, background = Screen.colors.NvimDarkYellow },
+      [3] = { foreground = Screen.colors.NvimLightGrey1, background = Screen.colors.NvimDarkYellow },
+      [4] = { foreground = Screen.colors.NvimLightGrey4 },
     })
     exec_lua(function() ---@diagnostic disable-next-line: duplicate-set-field
       vim.opt.rtp:append('.')
@@ -417,6 +418,29 @@ describe('main', function()
         cccccccccccccc                |
         ddd                           |
                                       |
+      ]],
+    }
+  end)
+
+  it('S', function()
+    n.feed('$<c-q>GSxyz')
+    screen:expect { -- no error msg
+      grid = [[
+        xyz^                           |
+        {4:~                             }|
+        {4:~                             }|
+        {4:~                             }|
+        {2:-- INSERT --}                  |
+      ]],
+    }
+    n.feed('<esc>')
+    screen:expect {
+      grid = [[
+        xy^z                           |
+        {4:~                             }|
+        {4:~                             }|
+        {4:~                             }|
+        3 fewer lines                 |
       ]],
     }
   end)
