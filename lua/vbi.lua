@@ -82,6 +82,7 @@ local attach = function(ev)
       local text = newline:sub(icol, #newline - #line + ccol)
       local srow = math.max(fn.line('w0'), vsrow)
       local erow = math.min(fn.line('w$') - 1, verow - 1)
+      local tabstop = vim.o.tabstop
       for row = srow, erow do
         local idx = row - srow
         local ecol = api.nvim_buf_get_lines(0, row, row + 1, true)[1]:len()
@@ -93,7 +94,9 @@ local attach = function(ev)
           local pad = eol and '' or (' '):rep(icol - ecol - 1)
           marks[idx] = api.nvim_buf_set_extmark(0, ns, row, col, {
             id = marks[idx],
-            virt_text = { { pad .. text, hl } },
+            -- virt_text = { { pad .. text, hl } },
+            -- https://github.com/neovim/neovim/issues/36220
+            virt_text = { { pad .. (text:gsub('\t', (' '):rep(tabstop))), hl } },
             virt_text_pos = 'inline',
           })
         elseif marks[idx] then

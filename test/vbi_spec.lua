@@ -452,4 +452,27 @@ describe('main', function()
       ]],
     }
   end)
+
+  it('tab', function()
+    n.feed('$<c-q>GI<c-q><c-i>xyz')
+    screen:expect {
+      grid = [[
+        aaa     xyz^aa                 |
+        bbb{1:        xyz}bbbbbbbbb       |
+        ccc{1:        xyz}ccccccccccc     |
+        ddd{1:        xyz}                |
+        {2:-- INSERT --}                  |
+      ]],
+    }
+    n.feed('<esc>')
+    screen:expect {
+      grid = [[
+        aaa    ^ xyzaa                 |
+        bbb     xyzbbbbbbbbb          |
+        ccc     xyzccccccccccc        |
+        ddd     xyz                   |
+                                      |
+      ]],
+    }
+  end)
 end)
