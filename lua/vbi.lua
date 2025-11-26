@@ -10,7 +10,10 @@ local is_eol = function() return pos[5] == vim.v.maxcol end
 
 local last_key ---@type string
 local attach_key = function() -- currently only consider v-block->insert
-  vim.on_key(function(k, _) last_key = k end, ns)
+  vim.on_key(function(k, _)
+    update_pos()
+    last_key = k
+  end, ns)
 end
 local detach_key = function() vim.on_key(nil, ns) end
 local is_append = function() return last_key == 'A' end
@@ -115,5 +118,5 @@ autocmd('ModeChanged', { pattern = '*:no', group = group, callback = attach_key 
 autocmd('ModeChanged', { pattern = '\022:*', group = group, callback = detach_key })
 autocmd('ModeChanged', { pattern = 'no:*', group = group, callback = detach_key })
 autocmd('InsertLeave', { pattern = '*', group = group, callback = detach })
-autocmd('CursorMoved', { pattern = '*', group = group, callback = update_pos })
+-- autocmd('CursorMoved', { pattern = '*', group = group, callback = update_pos })
 vim.schedule(update_pos)

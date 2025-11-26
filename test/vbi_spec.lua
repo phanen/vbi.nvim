@@ -475,4 +475,18 @@ describe('main', function()
       ]],
     }
   end)
+
+  it('eol of empty', function()
+    n.api.nvim_buf_set_lines(0, 0, -1, false, { '', '', '', '' })
+    n.feed('<c-q>G$Axyz')
+    screen:expect {
+      grid = [[
+        xyz^                           |
+        {1:xyz}                           |
+        {1:xyz}                           |
+        {1:xyz}                           |
+        {2:-- INSERT --}                  |
+      ]],
+    }
+  end)
 end)
