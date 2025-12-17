@@ -489,4 +489,24 @@ describe('main', function()
       ]],
     }
   end)
+
+  it('wrap', function()
+    local lines = n.fn.map(n.fn.range(10), '"foo" . v:val . "bar"')
+    n.api.nvim_buf_set_lines(0, 0, -1, false, lines)
+    n.feed('f0<c-q>GI')
+    for _ = 1, 5 do
+      n.feed(('a'):rep(10))
+      n.sleep(1)
+    end
+    n.feed('<c-w>')
+    screen:expect {
+      grid = [[
+        foo^0bar                       |
+        foo1bar                       |
+        foo2bar                       |
+        foo3bar                       |
+        {2:-- INSERT --}                  |
+      ]],
+    }
+  end)
 end)

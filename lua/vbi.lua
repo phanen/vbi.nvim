@@ -82,10 +82,11 @@ local attach = function(ev)
   local line = api.nvim_buf_get_lines(0, vsrow - 1, vsrow, true)[1]
   local crow, ccol = unpack(api.nvim_win_get_cursor(0))
   local marks = {} ---@type { [integer]: integer? }
-  ---@diagnostic disable-next-line: assign-type-mismatch, param-type-mismatch
-  auid = autocmd({ 'TextChangedI', 'CursorMovedI' }, {
+  local w_height = api.nvim_win_get_height(0)
+  auid = autocmd({ 'TextChangedI', 'CursorMovedI', 'WinResized' }, {
     group = group,
-    callback = function()
+    callback = function(args)
+      w_height = args.event == 'WinResized' and api.nvim_win_get_height(0) or w_height
       if crow ~= api.nvim_win_get_cursor(0)[1] then return detach() end
       local newline = api.nvim_get_current_line()
       local text = newline:sub(icol, #newline - #line + ccol)
@@ -108,6 +109,9 @@ local attach = function(ev)
         elseif marks[idx] then
           api.nvim_buf_del_extmark(0, ns, marks[idx])
         end
+      end
+      for idx = erow - srow + 1, w_height do
+        if marks[idx] then api.nvim_buf_del_extmark(0, ns, marks[idx]) end
       end
     end,
   })
