@@ -1,12 +1,16 @@
+---START INJECT vbi.lua
+
 local api, fn = vim.api, vim.fn
 local autocmd = api.nvim_create_autocmd
 local ns = api.nvim_create_namespace('u.vbi')
+local ns_c = api.nvim_create_namespace('u.vbi.ctrl_c')
 local group = api.nvim_create_augroup('u.vbi', { clear = true })
 local auid ---@type integer?
 
-local pos ---@type [integer, integer, integer, integer, integer]
-local update_pos = function() pos = fn.getcurpos() end
-local is_eol = function() return pos[5] == vim.v.maxcol end
+local last_curswant ---@type integer?
+local maxcol = vim.v.maxcol
+local update_pos = function() last_curswant = fn.getcurpos()[5] end
+local is_eol = function() return last_curswant == maxcol end
 
 local last_key ---@type string
 local attach_key = function() -- currently only consider v-block->insert
@@ -18,6 +22,7 @@ end
 local detach_key = function() vim.on_key(nil, ns) end
 local is_append = function() return last_key == 'A' end
 local is_change = function() return last_key and last_key:find('[scC]') and true or false end
+local is_delete = function() return last_key == 'S' or last_key == 'R' end
 
 local detach = function()
   if auid then
@@ -26,13 +31,14 @@ local detach = function()
   end
   api.nvim_buf_clear_namespace(0, ns, 0, -1)
   detach_key()
+  vim.on_key(nil, ns_c)
 end
 
 local ctrl_c = api.nvim_replace_termcodes('<c-c>', true, true, true)
 local attach_ctrl_c = function()
   vim.on_key(function(key)
     if key == ctrl_c then detach() end
-  end)
+  end, ns_c)
 end
 
 local attach = function(ev)
@@ -44,7 +50,7 @@ local attach = function(ev)
   local nov2i = ev.match == 'no\022:i' -- c<c-q>xx can never append to eol
   local no2i = ev.match == 'no:i'
   local eol = not no2i and not nov2i and is_eol() and append -- `<c-q>$jjjc` is not "eol"
-  if no2i and last_key ~= 'v' or last_key == 'S' or vsrow == 0 then return end -- cgv
+  if no2i and last_key ~= 'v' or is_delete() or vsrow == 0 then return end -- cgv
   local change = is_change() or nov2i or no2i
   local icol ---@type integer
   if eol then -- <c-q>j$Axx
@@ -89,7 +95,6 @@ local attach = function(ev)
       for row = srow, erow do
         local idx = row - srow
         local ecol = api.nvim_buf_get_lines(0, row, row + 1, true)[1]:len()
-        -- not eof-append -> "cliff" -> insert don't need cliff
         local col = (not eol and icol - 1 <= ecol) and icol - 1
           or (append or change) and ecol
           or nil
@@ -97,8 +102,6 @@ local attach = function(ev)
           local pad = eol and '' or (' '):rep(icol - ecol - 1)
           marks[idx] = api.nvim_buf_set_extmark(0, ns, row, col, {
             id = marks[idx],
-            -- virt_text = { { pad .. text, hl } },
-            -- https://github.com/neovim/neovim/issues/36220
             virt_text = { { pad .. (text:gsub('\t', (' '):rep(tabstop))), hl } },
             virt_text_pos = 'inline',
           })
@@ -118,5 +121,4 @@ autocmd('ModeChanged', { pattern = '*:no', group = group, callback = attach_key 
 autocmd('ModeChanged', { pattern = '\022:*', group = group, callback = detach_key })
 autocmd('ModeChanged', { pattern = 'no:*', group = group, callback = detach_key })
 autocmd('InsertLeave', { pattern = '*', group = group, callback = detach })
--- autocmd('CursorMoved', { pattern = '*', group = group, callback = update_pos })
 vim.schedule(update_pos)
