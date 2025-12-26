@@ -19,7 +19,7 @@ describe('main', function()
       vim.opt.rtp:append('.')
       -- vim.o.ve = 'block'
       vim.o.sol = false -- this change `<c-q>G` behavior
-      vim.cmd.runtime { 'plugin/vbi.lua', bang = true }
+      vim.cmd.runtime({ 'plugin/vbi.lua', bang = true })
     end)
     n.api.nvim_buf_set_lines(0, 0, -1, false, {
       'aaaaa',
@@ -30,7 +30,7 @@ describe('main', function()
   end)
   it('chore', function()
     n.feed('<c-q>GIabc')
-    screen:expect {
+    screen:expect({
       grid = [[
         abc^aaaaa                      |
         {1:abc}bbbbbbbbbbbb               |
@@ -38,9 +38,9 @@ describe('main', function()
         {1:abc}ddd                        |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
     n.feed('<esc>')
-    screen:expect {
+    screen:expect({
       grid = [[
         ^abcaaaaa                      |
         abcbbbbbbbbbbbb               |
@@ -48,13 +48,11 @@ describe('main', function()
         abcddd                        |
                                       |
       ]],
-    }
+    })
 
-    if n.fn.has('nvim-0.12') ~= 1 then
-      pending('https://github.com/vim/vim/commit/cb27992c', function() end)
-    end
+    if n.fn.has('nvim-0.12') ~= 1 then pending('https://github.com/vim/vim/commit/cb27992c') end
     n.feed('dgv..')
-    screen:expect {
+    screen:expect({
       grid = [[
         ^aaaaa                         |
         bbbbbbbbbbbb                  |
@@ -62,10 +60,10 @@ describe('main', function()
         ddd                           |
                                       |
       ]],
-    }
+    })
 
     n.feed('<c-q>G$Axyz')
-    screen:expect {
+    screen:expect({
       grid = [[
         aaaaaxyz^                      |
         bbbbbbbbbbbb{1:xyz}               |
@@ -73,10 +71,10 @@ describe('main', function()
         ddd{1:xyz}                        |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
 
     n.feed('<esc>')
-    screen:expect {
+    screen:expect({
       grid = [[
         ^aaaaaxyz                      |
         bbbbbbbbbbbbxyz               |
@@ -84,10 +82,10 @@ describe('main', function()
         dddxyz                        |
                                       |
       ]],
-    }
+    })
 
     n.feed('gofy<c-q>GAA')
-    screen:expect {
+    screen:expect({
       grid = [[
         aaaaaxyA^z                     |
         bbbbbbb{1:A}bbbbbxyz              |
@@ -95,9 +93,9 @@ describe('main', function()
         dddxyz{1: A}                      |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
     n.feed('<esc>')
-    screen:expect {
+    screen:expect({
       grid = [[
         aaaaax^yAz                     |
         bbbbbbbAbbbbbxyz              |
@@ -105,11 +103,11 @@ describe('main', function()
         dddxyz A                      |
                                       |
       ]],
-    }
+    })
 
     n.api.nvim_command('se ve=block')
     n.feed('gv3lo3lII')
-    screen:expect {
+    screen:expect({
       grid = [[
         aaaaaxyAzI^                    |
         bbbbbbbAb{1:I}bbbbxyz             |
@@ -117,10 +115,10 @@ describe('main', function()
         dddxyz A                      |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
 
     n.feed('<esc>')
-    screen:expect {
+    screen:expect({
       grid = [[
         aaaaaxyAz^I                    |
         bbbbbbbAbIbbbbxyz             |
@@ -128,11 +126,11 @@ describe('main', function()
         dddxyz A                      |
                                       |
       ]],
-    }
+    })
   end)
   it('c<c-q>G', function()
     n.feed('c<c-q>Gabc')
-    screen:expect {
+    screen:expect({
       grid = [[
         abc^aaaa                       |
         {1:abc}bbbbbbbbbbb                |
@@ -140,9 +138,9 @@ describe('main', function()
         {1:abc}dd                         |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
     n.feed('<esc>')
-    screen:expect {
+    screen:expect({
       grid = [[
         ab^caaaa                       |
         abcbbbbbbbbbbb                |
@@ -150,14 +148,14 @@ describe('main', function()
         abcdd                         |
                                       |
       ]],
-    }
+    })
   end)
 
   it('c<c-q>/', function()
     -- c<c-q>gn, c<c-q>gv don't work...
     -- not useful: c<c-q>%, c<c-q>}
     n.feed('c<c-q>ipabc<esc>')
-    screen:expect {
+    screen:expect({
       grid = [[
         ab^caaaa                       |
         abcbbbbbbbbbbb                |
@@ -165,9 +163,9 @@ describe('main', function()
         abcdd                         |
                                       |
       ]],
-    }
+    })
     n.feed('goc<c-q>/d<cr>kaka')
-    screen:expect {
+    screen:expect({
       grid = [[
         kaka^aaa                       |
         {1:kaka}bbbbbbbbbb                |
@@ -175,11 +173,11 @@ describe('main', function()
         {1:kakad}                         |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
 
-    if n.fn.has('nvim-0.12') ~= 1 then pending('idk', function() end) end
+    if n.fn.has('nvim-0.12') ~= 1 then pending('idk') end
     n.feed('<esc>')
-    screen:expect {
+    screen:expect({
       grid = [[
         kak^aaaa                       |
         kakabbbbbbbbbb                |
@@ -187,12 +185,12 @@ describe('main', function()
         kaka{1:d}                         |
         /d                     [1/2]  |
       ]],
-    }
+    })
   end)
 
   it('<c-q>c', function()
     n.feed('$<c-q>Gckkk')
-    screen:expect {
+    screen:expect({
       grid = [[
         aaakkk^                        |
         bbb{1:kkk}                        |
@@ -200,9 +198,9 @@ describe('main', function()
         ddd{1:kkk}                        |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
     n.feed('<esc>')
-    screen:expect {
+    screen:expect({
       grid = [[
         aaakk^k                        |
         bbbkkk                        |
@@ -210,10 +208,10 @@ describe('main', function()
         dddkkk                        |
                                       |
       ]],
-    }
+    })
 
     n.feed('go<c-q>GC')
-    screen:expect {
+    screen:expect({
       grid = [[
         ^                              |
                                       |
@@ -221,9 +219,9 @@ describe('main', function()
                                       |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
     n.feed('foo')
-    screen:expect {
+    screen:expect({
       grid = [[
         foo^                           |
         {1:foo}                           |
@@ -231,10 +229,10 @@ describe('main', function()
         {1:foo}                           |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
 
     n.feed('<c-c>')
-    screen:expect {
+    screen:expect({
       grid = [[
         fo^o                           |
                                       |
@@ -242,12 +240,12 @@ describe('main', function()
                                       |
                                       |
       ]],
-    }
+    })
   end)
 
   it('<c-c>', function()
     n.feed('<c-q>GIabc')
-    screen:expect {
+    screen:expect({
       grid = [[
         abc^aaaaa                      |
         {1:abc}bbbbbbbbbbbb               |
@@ -255,9 +253,9 @@ describe('main', function()
         {1:abc}ddd                        |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
     n.feed('<c-c><esc>')
-    screen:expect {
+    screen:expect({
       grid = [[
         ab^caaaaa                      |
         bbbbbbbbbbbb                  |
@@ -265,7 +263,7 @@ describe('main', function()
         ddd                           |
                                       |
       ]],
-    }
+    })
   end)
 
   it('cgv', function()
@@ -273,7 +271,7 @@ describe('main', function()
       pending('https://github.com/vim/vim/commit/cb27992c', function() end)
     end
     n.feed('cgv')
-    screen:expect { -- no error msg
+    screen:expect({ -- no error msg
       grid = [[
         ^aaaaa                         |
         bbbbbbbbbbbb                  |
@@ -281,11 +279,11 @@ describe('main', function()
         ddd                           |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
     n.feed('<esc>')
 
     n.feed('$cgv')
-    screen:expect { -- no error msg
+    screen:expect({ -- no error msg
       grid = [[
         aaaa^                          |
         bbbbbbbbbbbb                  |
@@ -293,11 +291,11 @@ describe('main', function()
         ddd                           |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
     n.feed('<esc>u_') -- idk, it eat a char
 
     n.feed('<c-q>G<esc>cgvabc')
-    screen:expect {
+    screen:expect({
       grid = [[
         abc^aaaa                       |
         {1:abc}bbbbbbbbbbb                |
@@ -305,10 +303,10 @@ describe('main', function()
         {1:abc}dd                         |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
 
     n.feed('<esc>C')
-    screen:expect {
+    screen:expect({
       grid = [[
         ab^                            |
         abcbbbbbbbbbbb                |
@@ -316,11 +314,11 @@ describe('main', function()
         abcdd                         |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
 
     -- $<c-q>G<esc>cgv
     n.feed('<esc>')
-    screen:expect {
+    screen:expect({
       grid = [[
         a^b                            |
         abcbbbbbbbbbbb                |
@@ -328,9 +326,9 @@ describe('main', function()
         abcdd                         |
                                       |
       ]],
-    }
+    })
     n.feed('$<c-q>G<esc>cgvxyz')
-    screen:expect {
+    screen:expect({
       grid = [[
         axyz^                          |
         a{1:xyz}                          |
@@ -338,7 +336,7 @@ describe('main', function()
         a{1:xyz}                          |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
 
     n.feed('<esc>')
     -- the above test make no sense
@@ -349,7 +347,7 @@ describe('main', function()
       'ddddddd',
     })
     n.feed('$<c-q>G<esc>cgvxyz')
-    screen:expect {
+    screen:expect({
       grid = [[
         aaaaaaaxyz^                    |
         bb{1:     xyz}                    |
@@ -357,12 +355,12 @@ describe('main', function()
         ddddddd{1:xyz}                    |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
   end)
 
   it('<c-w>', function()
     n.feed('<c-q>GIabc')
-    screen:expect {
+    screen:expect({
       grid = [[
         abc^aaaaa                      |
         {1:abc}bbbbbbbbbbbb               |
@@ -370,9 +368,9 @@ describe('main', function()
         {1:abc}ddd                        |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
     n.feed('<c-w>')
-    screen:expect {
+    screen:expect({
       grid = [[
         ^aaaaa                         |
         bbbbbbbbbbbb                  |
@@ -380,12 +378,12 @@ describe('main', function()
         ddd                           |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
   end)
 
   it('insert at eol', function()
     n.feed('G$gg<c-q>GIabc')
-    screen:expect {
+    screen:expect({
       grid = [[
         aaaabc^aa                      |
         bbb{1:abc}bbbbbbbbb               |
@@ -393,9 +391,9 @@ describe('main', function()
         ddd{1:abc}                        |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
     n.feed('<esc>')
-    screen:expect {
+    screen:expect({
       grid = [[
         aaa^abcaa                      |
         bbbabcbbbbbbbbb               |
@@ -403,12 +401,12 @@ describe('main', function()
         dddabc                        |
                                       |
       ]],
-    }
+    })
   end)
 
   it('insert newline', function()
     n.feed('dd<c-q>GI<c-r>"xxx')
-    screen:expect {
+    screen:expect({
       grid = [[
         aaaaa                         |
         xxx^bbbbbbbbbbbb               |
@@ -416,9 +414,9 @@ describe('main', function()
         ddd                           |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
     n.feed('<esc>')
-    screen:expect {
+    screen:expect({
       grid = [[
         aaaaa                         |
         xx^xbbbbbbbbbbbb               |
@@ -426,12 +424,12 @@ describe('main', function()
         ddd                           |
                                       |
       ]],
-    }
+    })
   end)
 
   it('S', function()
     n.feed('$<c-q>GSxyz')
-    screen:expect { -- no error msg
+    screen:expect({ -- no error msg
       grid = [[
         xyz^                           |
         {4:~                             }|
@@ -439,10 +437,10 @@ describe('main', function()
         {4:~                             }|
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
     n.feed('<esc>')
-    if n.fn.has('nvim-0.12') ~= 1 then pending('idk', function() end) end
-    screen:expect {
+    if n.fn.has('nvim-0.12') ~= 1 then pending('idk') end
+    screen:expect({
       grid = [[
         xy^z                           |
         {4:~                             }|
@@ -450,12 +448,12 @@ describe('main', function()
         {4:~                             }|
         3 fewer lines                 |
       ]],
-    }
+    })
   end)
 
   it('tab', function()
     n.feed('$<c-q>GI<c-q><c-i>xyz')
-    screen:expect {
+    screen:expect({
       grid = [[
         aaa     xyz^aa                 |
         bbb{1:        xyz}bbbbbbbbb       |
@@ -463,9 +461,9 @@ describe('main', function()
         ddd{1:        xyz}                |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
     n.feed('<esc>')
-    screen:expect {
+    screen:expect({
       grid = [[
         aaa    ^ xyzaa                 |
         bbb     xyzbbbbbbbbb          |
@@ -473,13 +471,13 @@ describe('main', function()
         ddd     xyz                   |
                                       |
       ]],
-    }
+    })
   end)
 
   it('eol of empty', function()
     n.api.nvim_buf_set_lines(0, 0, -1, false, { '', '', '', '' })
     n.feed('<c-q>G$Axyz')
-    screen:expect {
+    screen:expect({
       grid = [[
         xyz^                           |
         {1:xyz}                           |
@@ -487,7 +485,7 @@ describe('main', function()
         {1:xyz}                           |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
   end)
 
   it('wrap', function()
@@ -499,7 +497,7 @@ describe('main', function()
       n.sleep(1)
     end
     n.feed('<c-w>')
-    screen:expect {
+    screen:expect({
       grid = [[
         foo^0bar                       |
         foo1bar                       |
@@ -507,6 +505,6 @@ describe('main', function()
         foo3bar                       |
         {2:-- INSERT --}                  |
       ]],
-    }
+    })
   end)
 end)

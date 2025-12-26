@@ -1,6 +1,7 @@
 ---START INJECT vbi.lua
 
 local api, fn = vim.api, vim.fn
+if fn.exists('*getregionpos') ~= 1 then return vim.notify('[vbi] getregionpos unsupported') end
 local autocmd = api.nvim_create_autocmd
 local ns = api.nvim_create_namespace('u.vbi')
 local ns_c = api.nvim_create_namespace('u.vbi.ctrl_c')
