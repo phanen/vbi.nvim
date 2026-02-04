@@ -2,6 +2,7 @@
 local n = require('nvim-test.helpers')
 local Screen = require('nvim-test.screen')
 local exec_lua = n.exec_lua
+local cmd = n.api.nvim_command
 
 describe('main', function()
   local screen --- @type test.screen
@@ -506,5 +507,22 @@ describe('main', function()
         {2:-- INSERT --}                  |
       ]],
     })
+  end)
+
+  it('"not enough memory"', function()
+    n.feed('vlA??<esc>.<c-q>jA')
+    -- screen:snapshot_util()
+    screen:expect({ any = 'not enough' })
+    pending('not enough memory')
+  end)
+
+  it('dot repeat ModeChanged', function()
+    local _, err = pcall(function()
+      exec_lua(
+        function() vim.cmd.normal({ vim.keycode('<c-q>$A<bs><bs><esc>..'), bang = true }) end
+      )
+    end)
+    assert(err)
+    pending('dot repeat ModeChanged')
   end)
 end)
