@@ -8,6 +8,7 @@ local ns_c = api.nvim_create_namespace('u.vbi.ctrl_c')
 local group = api.nvim_create_augroup('u.vbi', { clear = true })
 local auid ---@type integer?
 
+_G.IS_VBI = nil
 local last_curswant ---@type integer?
 local maxcol = vim.v.maxcol
 local update_pos = function() last_curswant = fn.getcurpos()[5] end
@@ -26,6 +27,7 @@ local is_change = function() return last_key and last_key:find('[scC]') and true
 local is_delete = function() return last_key == 'S' or last_key == 'R' end
 
 local detach = function()
+  _G.IS_VBI = false
   if auid then
     api.nvim_del_autocmd(auid)
     auid = nil
@@ -45,6 +47,7 @@ end
 local attach = function(ev)
   detach()
   attach_ctrl_c()
+  _G.IS_VBI = true
   local append = is_append()
   local vspos, vepos = fn.getpos("'<"), fn.getpos("'>")
   local vsrow, vscol, verow, vecol = vspos[2], vspos[3], vepos[2], vepos[3]
