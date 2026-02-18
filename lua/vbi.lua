@@ -1,7 +1,9 @@
 ---START INJECT vbi.lua
 
 local api, fn = vim.api, vim.fn
-if fn.exists('*getregionpos') ~= 1 then return vim.notify('[vbi] getregionpos unsupported') end
+if fn.exists('*getregionpos') ~= 1 then
+  return (function() vim.notify('[vbi] getregionpos unsupported') end)()
+end
 local autocmd = api.nvim_create_autocmd
 local ns = api.nvim_create_namespace('u.vbi')
 local ns_c = api.nvim_create_namespace('u.vbi.ctrl_c')
@@ -54,7 +56,7 @@ local attach = function(ev)
   local nov2i = ev.match == 'no\022:i' -- c<c-q>xx can never append to eol
   local no2i = ev.match == 'no:i'
   local eol = not no2i and not nov2i and is_eol() and append -- `<c-q>$jjjc` is not "eol"
-  if no2i and last_key ~= 'v' or is_delete() or vsrow == 0 then return end -- cgv
+  if no2i and last_key ~= 'v' or is_delete() or vsrow == 0 then return detach() end -- cgv
   local change = is_change() or nov2i or no2i
   local icol ---@type integer
   if eol then -- <c-q>j$Axx
