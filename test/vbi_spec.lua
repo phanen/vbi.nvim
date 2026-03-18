@@ -11,10 +11,12 @@ describe('main', function()
     screen = Screen.new(30, 5)
     screen:attach()
     screen:set_default_attr_ids({
-      [1] = { background = Screen.colors.NvimLightYellow, foreground = Screen.colors.NvimDarkGray1 },
+      [1] = { foreground = Screen.colors.NvimDarkGrey1, background = Screen.colors.NvimLightYellow },
       [2] = { foreground = Screen.colors.NvimDarkGreen },
-      [3] = { foreground = Screen.colors.NvimLightGrey1, background = Screen.colors.NvimDarkYellow },
-      [4] = { foreground = Screen.colors.NvimLightGrey4 },
+      [3] = { background = Screen.colors.NvimDarkYellow, foreground = Screen.colors.NvimLightGray1 },
+      [4] = { foreground = Screen.colors.NvimLightGray4 },
+      [5] = { background = Screen.colors.NvimLightRed, foreground = Screen.colors.NvimDarkGrey1 },
+      [6] = { background = Screen.colors.NvimLightGray4 },
     })
     exec_lua(function() ---@diagnostic disable-next-line: duplicate-set-field
       vim.opt.rtp:append('.')
@@ -524,5 +526,50 @@ describe('main', function()
     end)
     assert(err)
     pending('dot repeat ModeChanged')
+  end)
+
+  it('mixed spaces and tabs', function()
+    n.api.nvim_buf_set_lines(0, 0, -1, false, {
+      '    foo',
+      '\t\tbar',
+      -- '    bar',
+    })
+    screen:expect {
+      grid = [[
+        ^    foo                       |
+                        bar           |
+        {4:~                             }|
+        {4:~                             }|
+                                      |
+      ]],
+    }
+    -- print(table.concat(vim.tbl_map(function(s) return ('%q'):format(s) end, exec_lua(function() return vim.v.argv end)), ' '))
+    -- --cmd "set background=light noswapfile noautoindent startofline laststatus=1 undodir=. directory=. viewdir=. backupdir=. wildoptions-=pum joinspaces noshowcmd noruler nomore redrawdebug=invalid"
+    pending('weird screen:expect')
+    n.feed('ggg^<c-q>G')
+    screen:snapshot_util()
+    n.feed('<c-q>G')
+    screen:snapshot_util()
+  end)
+
+  it('misc: screen.lua work with ws fg', function()
+    local buf = n.api.nvim_get_current_buf()
+    local lnum, _ = 1, 0
+    n.api.nvim_buf_set_lines(buf, 0, -1, false, {
+      (' '):rep(10),
+      (' '):rep(10),
+    })
+    -- n.api.nvim_set_hl(0, 'MyExtmarkHighlight', { bg = '#880000', fg = '#FFFFFF' })
+    local ns = n.api.nvim_create_namespace('')
+    n.api.nvim_buf_set_extmark(buf, ns, lnum, 0, { end_col = 3, hl_group = 'Error' })
+    screen:expect {
+      grid = [[
+        ^                              |
+        {5:   }                           |
+        {4:~                             }|
+        {4:~                             }|
+                                      |
+      ]],
+    }
   end)
 end)
