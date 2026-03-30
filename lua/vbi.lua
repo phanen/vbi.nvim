@@ -56,7 +56,9 @@ local attach = function(ev)
   local nov2i = ev.match == 'no\022:i' -- c<c-q>xx can never append to eol
   local no2i = ev.match == 'no:i'
   local eol = not no2i and not nov2i and is_eol() and append -- `<c-q>$jjjc` is not "eol"
-  if no2i and last_key ~= 'v' or is_delete() or vsrow == 0 then return detach() end -- cgv
+  if no2i and (last_key ~= 'v' or fn.visualmode() ~= '\022') or is_delete() or vsrow == 0 then -- cgv
+    return detach()
+  end
   local change = is_change() or nov2i or no2i
   local icol ---@type integer
   if eol then -- <c-q>j$Axx

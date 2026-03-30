@@ -359,6 +359,16 @@ describe('main', function()
         {2:-- INSERT --}                  |
       ]],
     })
+    n.feed('<esc>Vj<esc>cgvabc')
+    screen:expect {
+      grid = [[
+        abc^                           |
+        ccc                           |
+        dddddddxyz                    |
+        {4:~                             }|
+        {2:-- INSERT --}                  |
+      ]],
+    }
   end)
 
   it('<c-w>', function()
